@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import httpx
 from typing import Optional
+from pathlib import Path
 
 app = FastAPI(
     title="Valorant Fanbase API",
@@ -109,10 +110,11 @@ async def get_actors(language: Optional[str] = "en-US"):
 
 # ── Root / HTML frontend ───────────────────────────────────────────────────────
 
+BASE_DIR = Path(__file__).parent
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def root():
-    with open("static/index.html") as f:
-        return f.read()
+    return (BASE_DIR / "static" / "index.html").read_text()
 
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
