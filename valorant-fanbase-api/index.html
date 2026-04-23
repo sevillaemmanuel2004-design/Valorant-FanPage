@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valorant Fanbase API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #ff4655;
+      --red-dim: #c0313e;
+      --gold: #f0b232;
+      --white: #ece8e1;
+      --dark: #0f1923;
+      --dark2: #1a2634;
+      --dark3: #253040;
+      --muted: #7b8a96;
+      --green: #00c896;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark);
+      color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      padding: 40px 40px 24px;
+      border-bottom: 2px solid var(--red);
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      background: linear-gradient(135deg, var(--dark) 60%, #1e0a0e);
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -55deg,
+        transparent,
+        transparent 18px,
+        rgba(255,70,85,0.03) 18px,
+        rgba(255,70,85,0.03) 19px
+      );
+      pointer-events: none;
+    }
+    .logo-mark {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 44px;
+      color: var(--red);
+      letter-spacing: -2px;
+      line-height: 1;
+      position: relative;
+    }
+    .logo-mark span { color: var(--white); }
+    .header-sub {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .status-pill {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,200,150,0.1);
+      border: 1px solid var(--green);
+      border-radius: 2px;
+      padding: 6px 14px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; } 50% { opacity:0.3; }
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      gap: 0;
+      background: var(--dark2);
+      border-bottom: 1px solid var(--dark3);
+      padding: 0 40px;
+    }
+    nav button {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 16px 24px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    nav button:hover { color: var(--white); }
+    nav button.active { color: var(--red); border-bottom-color: var(--red); }
+
+    /* ── MAIN ── */
+    main { padding: 32px 40px; max-width: 1400px; }
+
+    /* ── ENDPOINT CARD ── */
+    .endpoint-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .endpoint-card {
+      background: var(--dark2);
+      border: 1px solid var(--dark3);
+      border-left: 3px solid var(--red);
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .endpoint-card:hover {
+      border-color: var(--red);
+      background: #1e2d3f;
+      transform: translateY(-2px);
+    }
+    .endpoint-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      border-style: solid;
+      border-width: 0 20px 20px 0;
+      border-color: transparent var(--dark3) transparent transparent;
+    }
+    .ep-method {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .ep-path {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .ep-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── AGENT GRID ── */
+    .agents-section { display: none; }
+    .agents-section.active { display: block; }
+    .agents-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .section-title span { color: var(--red); }
+    .role-filter {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .role-btn {
+      background: var(--dark2);
+      border: 1px solid var(--dark3);
+      color: var(--muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 7px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 1px;
+    }
+    .role-btn:hover, .role-btn.active {
+      background: var(--red);
+      border-color: var(--red);
+      color: var(--white);
+    }
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .agent-card {
+      background: var(--dark2);
+      border: 1px solid var(--dark3);
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .agent-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--red);
+    }
+    .agent-card:hover .agent-name-bar { background: var(--red); }
+    .agent-portrait {
+      width: 100%;
+      aspect-ratio: 9/16;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      background: var(--dark3);
+    }
+    .agent-name-bar {
+      background: var(--dark3);
+      padding: 10px 14px;
+      transition: background 0.2s;
+    }
+    .agent-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .agent-role-tag {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── DETAIL PANEL ── */
+    .detail-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .detail-overlay.open { display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; }
+    .detail-panel {
+      background: var(--dark2);
+      border: 1px solid var(--dark3);
+      border-top: 3px solid var(--red);
+      max-width: 800px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 0;
+      overflow: hidden;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .detail-portrait-col {
+      position: relative;
+      overflow: hidden;
+    }
+    .detail-portrait {
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+    .detail-portrait-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, transparent 50%, var(--dark2));
+    }
+    .detail-content { padding: 32px; }
+    .detail-role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,70,85,0.1);
+      border: 1px solid var(--red);
+      padding: 4px 12px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 12px;
+    }
+    .detail-role-icon { width: 16px; height: 16px; filter: invert(40%) sepia(80%) saturate(500%) hue-rotate(320deg); }
+    .detail-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .detail-desc {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+    .abilities-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .abilities-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--dark3);
+    }
+    .ability-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .ability-icon {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      background: var(--dark3);
+      padding: 4px;
+      flex-shrink: 0;
+      border: 1px solid var(--dark3);
+    }
+    .ability-info {}
+    .ability-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .ability-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+    .detail-close {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+      z-index: 10;
+    }
+    .detail-close:hover { color: var(--red); }
+
+    /* ── API EXPLORER ── */
+    .explorer-section { display: none; }
+    .explorer-section.active { display: block; }
+    .explorer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .explorer-box { background: var(--dark2); border: 1px solid var(--dark3); padding: 24px; }
+    .box-label {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .url-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .url-input {
+      flex: 1;
+      background: var(--dark);
+      border: 1px solid var(--dark3);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .url-input:focus { border-color: var(--red); }
+    .send-btn {
+      background: var(--red);
+      border: none;
+      color: var(--white);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 10px 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .send-btn:hover { background: var(--red-dim); }
+    .quick-links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .quick-link {
+      background: var(--dark3);
+      border: none;
+      color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-link:hover { background: var(--dark); color: var(--white); }
+    .response-box {
+      background: var(--dark);
+      border: 1px solid var(--dark3);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      padding: 16px;
+      min-height: 200px;
+      max-height: 480px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--green);
+      line-height: 1.6;
+    }
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.2s steps(4, end) infinite;
+    }
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+      100% { content: ''; }
+    }
+    .err { color: var(--red); }
+    .spinner { display: inline-block; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      header { padding: 24px 20px 16px; flex-wrap: wrap; }
+      main { padding: 20px; }
+      nav { padding: 0 20px; overflow-x: auto; }
+      .detail-panel { grid-template-columns: 1fr; }
+      .detail-portrait-col { max-height: 260px; }
+      .explorer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-mark">VAL<span>/</span>API</div>
+    <div class="header-sub">Valorant Fanbase API &nbsp;·&nbsp; Built with FastAPI</div>
+  </div>
+  <div class="status-pill"><span class="status-dot"></span>ONLINE</div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('overview')">Overview</button>
+  <button onclick="showTab('agents')">Agents</button>
+  <button onclick="showTab('explorer')">API Explorer</button>
+</nav>
+
+<main>
+
+  <!-- OVERVIEW -->
+  <div id="tab-overview">
+    <div style="margin-bottom:28px;">
+      <div class="section-title" style="margin-bottom:8px;">Valorant <span>Fanbase</span> API</div>
+      <p style="color:var(--muted);font-size:15px;max-width:640px;line-height:1.7;">
+        A FastAPI wrapper around <strong style="color:var(--white)">valorant-api.com</strong> providing clean endpoints for
+        characters, roles, abilities, and actors — structured like a fanbase wiki.
+      </p>
+    </div>
+    <div class="endpoint-grid">
+      <div class="endpoint-card" onclick="goToExplorer('/characters')">
+        <div class="ep-method">GET</div>
+        <div class="ep-path">/characters</div>
+        <div class="ep-desc">List all Valorant agents with portraits, roles, and icons.</div>
+      </div>
+      <div class="endpoint-card" onclick="goToExplorer('/characters/jett')">
+        <div class="ep-method">GET</div>
+        <div class="ep-path">/characters/{name}</div>
+        <div class="ep-desc">Get a single agent's full profile, abilities, and background colors.</div>
+      </div>
+      <div class="endpoint-card" onclick="goToExplorer('/actors')">
+        <div class="ep-method">GET</div>
+        <div class="ep-path">/actors</div>
+        <div class="ep-desc">Simplified cast list — all agents with role and icon only.</div>
+      </div>
+      <div class="endpoint-card" onclick="window.open('/docs','_blank')">
+        <div class="ep-method">DOCS</div>
+        <div class="ep-path">/docs</div>
+        <div class="ep-desc">Auto-generated Swagger UI with full interactive documentation.</div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:13px;color:var(--muted);">
+      Data sourced from <a href="https://valorant-api.com" target="_blank" style="color:var(--red);">valorant-api.com</a> — unofficial fan project, not affiliated with Riot Games.
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <div id="tab-agents" class="agents-section">
+    <div class="agents-header">
+      <div class="section-title">Agent <span>Roster</span></div>
+      <div id="agent-count" style="color:var(--muted);font-size:14px;"></div>
+    </div>
+    <div class="role-filter" id="role-filter"></div>
+    <div class="agents-grid" id="agents-grid">
+      <div style="color:var(--muted);font-size:14px;">Loading agents<span class="loading-dots"></span></div>
+    </div>
+  </div>
+
+  <!-- EXPLORER -->
+  <div id="tab-explorer" class="explorer-section">
+    <div class="section-title" style="margin-bottom:20px;">API <span>Explorer</span></div>
+    <div class="explorer-grid">
+      <div class="explorer-box">
+        <div class="box-label">Request</div>
+        <div class="url-row">
+          <input class="url-input" id="api-url" value="/characters" placeholder="/characters or /characters/jett"/>
+          <button class="send-btn" onclick="sendRequest()">SEND</button>
+        </div>
+        <div class="box-label">Quick Endpoints</div>
+        <div class="quick-links">
+          <button class="quick-link" onclick="setUrl('/characters')">GET /characters</button>
+          <button class="quick-link" onclick="setUrl('/actors')">GET /actors</button>
+          <button class="quick-link" onclick="setUrl('/characters/jett')">GET /characters/jett</button>
+          <button class="quick-link" onclick="setUrl('/characters/reyna')">GET /characters/reyna</button>
+          <button class="quick-link" onclick="setUrl('/characters/sage')">GET /characters/sage</button>
+          <button class="quick-link" onclick="setUrl('/characters/omen')">GET /characters/omen</button>
+        </div>
+      </div>
+      <div class="explorer-box">
+        <div class="box-label">Response</div>
+        <div class="response-box" id="response-box">// Hit SEND to query the API</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- AGENT DETAIL OVERLAY -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detail-panel">
+    <button class="detail-close" onclick="closeOverlay()">×</button>
+    <div class="detail-portrait-col">
+      <img class="detail-portrait" id="d-portrait" src="" alt=""/>
+      <div class="detail-portrait-overlay"></div>
+    </div>
+    <div class="detail-content">
+      <div class="detail-role-badge" id="d-role-badge">
+        <img class="detail-role-icon" id="d-role-icon" src="" alt=""/>
+        <span id="d-role-text"></span>
+      </div>
+      <div class="detail-name" id="d-name"></div>
+      <div class="detail-desc" id="d-desc"></div>
+      <div class="abilities-title">Abilities</div>
+      <div id="d-abilities"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allAgents = [];
+  let activeRole = 'All';
+
+  function showTab(tab) {
+    document.querySelectorAll('nav button').forEach((b,i) => b.classList.remove('active'));
+    const tabs = ['overview','agents','explorer'];
+    document.querySelectorAll('nav button')[tabs.indexOf(tab)].classList.add('active');
+
+    document.getElementById('tab-overview').style.display = tab === 'overview' ? '' : 'none';
+    document.getElementById('tab-agents').classList.toggle('active', tab === 'agents');
+    document.getElementById('tab-explorer').classList.toggle('active', tab === 'explorer');
+
+    if (tab === 'agents' && allAgents.length === 0) loadAgents();
+  }
+  document.getElementById('tab-overview').style.display = '';
+
+  async function loadAgents() {
+    try {
+      const res = await fetch('/characters');
+      const json = await res.json();
+      allAgents = json.characters || [];
+      document.getElementById('agent-count').textContent = `${allAgents.length} agents`;
+
+      const roles = ['All', ...new Set(allAgents.map(a => a.role).filter(Boolean))];
+      const rf = document.getElementById('role-filter');
+      rf.innerHTML = roles.map(r =>
+        `<button class="role-btn ${r==='All'?'active':''}" onclick="filterRole('${r}')">${r}</button>`
+      ).join('');
+
+      renderAgents(allAgents);
+    } catch(e) {
+      document.getElementById('agents-grid').innerHTML = `<div class="err">Failed to load agents: ${e.message}</div>`;
+    }
+  }
+
+  function filterRole(role) {
+    activeRole = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.textContent === role));
+    const filtered = role === 'All' ? allAgents : allAgents.filter(a => a.role === role);
+    renderAgents(filtered);
+  }
+
+  function renderAgents(agents) {
+    const grid = document.getElementById('agents-grid');
+    if (!agents.length) { grid.innerHTML = '<div style="color:var(--muted)">No agents found.</div>'; return; }
+    grid.innerHTML = agents.map(a => `
+      <div class="agent-card" onclick="openAgent('${a.name}')">
+        <img class="agent-portrait"
+          src="${a.portrait || a.icon || ''}"
+          alt="${a.name}"
+          onerror="this.src='${a.icon||''}';this.onerror=null"/>
+        <div class="agent-name-bar">
+          <div class="agent-name">${a.name}</div>
+          <div class="agent-role-tag">${a.role || '—'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function openAgent(name) {
+    try {
+      const res = await fetch(`/characters/${encodeURIComponent(name)}`);
+      const a = await res.json();
+      document.getElementById('d-portrait').src = a.portrait || a.icon || '';
+      document.getElementById('d-name').textContent = a.name;
+      document.getElementById('d-desc').textContent = a.description || '';
+      document.getElementById('d-role-text').textContent = a.role || '';
+      if (a.role_icon) {
+        document.getElementById('d-role-icon').src = a.role_icon;
+        document.getElementById('d-role-icon').style.display = '';
+      } else {
+        document.getElementById('d-role-icon').style.display = 'none';
+      }
+      const abHtml = (a.abilities || []).filter(ab => ab.name && ab.icon).map(ab => `
+        <div class="ability-row">
+          <img class="ability-icon" src="${ab.icon}" alt="${ab.name}" onerror="this.style.display='none'"/>
+          <div class="ability-info">
+            <div class="ability-name">${ab.name}</div>
+            <div class="ability-desc">${ab.description || ''}</div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('d-abilities').innerHTML = abHtml;
+      document.getElementById('detail-overlay').classList.add('open');
+    } catch(e) { alert('Could not load agent: ' + e.message); }
+  }
+
+  function closeDetail(e) { if (e.target === e.currentTarget) closeOverlay(); }
+  function closeOverlay() { document.getElementById('detail-overlay').classList.remove('open'); }
+
+  // Explorer
+  function setUrl(url) { document.getElementById('api-url').value = url; }
+  function goToExplorer(url) {
+    showTab('explorer');
+    setUrl(url);
+    sendRequest();
+  }
+
+  async function sendRequest() {
+    const path = document.getElementById('api-url').value.trim();
+    const box = document.getElementById('response-box');
+    box.textContent = '// Loading...';
+    box.className = 'response-box';
+    try {
+      const res = await fetch(path);
+      const json = await res.json();
+      box.textContent = JSON.stringify(json, null, 2);
+      box.className = res.ok ? 'response-box' : 'response-box err';
+    } catch(e) {
+      box.textContent = `// Error: ${e.message}`;
+      box.className = 'response-box err';
+    }
+  }
+  document.getElementById('api-url').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendRequest();
+  });
+</script>
+</body>
+</html>
